@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -116,4 +117,41 @@ func scanTasks(rows *sql.Rows) ([]*Task, error) {
 	}
 
 	return tasks, nil
+}
+
+// GetTask возвращает задачу по её идентификатору
+func GetTask(id string) (*Task, error) {
+	task := &Task{}
+
+	row := db.QueryRow(
+		`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`,
+		id)
+
+	err := row.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+// UpdateTask обновляет параметры задачи по её идентификатору
+func UpdateTask(task *Task) error {
+	query := `UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?`
+
+	res, err := db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return fmt.Errorf("задача не найдена")
+	}
+
+	return nil
 }

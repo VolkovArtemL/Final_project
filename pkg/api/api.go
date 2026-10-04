@@ -20,5 +20,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 		updateTaskHandler(w, r)
 	case http.MethodDelete:
 		deleteTaskHandler(w, r)
+	default:
+		http.Error(w, "метод не поддерживается", http.StatusMethodNotAllowed)
 	}
 }

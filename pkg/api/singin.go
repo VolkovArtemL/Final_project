@@ -30,13 +30,13 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	var req signInRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, "ошибка десериализации JSON")
+		writeError(w, http.StatusBadRequest, "ошибка десериализации JSON")
 		return
 	}
 
 	pass := os.Getenv("TODO_PASSWORD")
 	if req.Password != pass {
-		writeError(w, "Неверный пароль")
+		writeError(w, http.StatusUnauthorized, "Неверный пароль")
 		return
 	}
 
@@ -49,11 +49,11 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 
 	signedToken, err := token.SignedString([]byte(pass))
 	if err != nil {
-		writeError(w, "ошибка создания токена")
+		writeError(w, http.StatusInternalServerError, "ошибка создания токена")
 		return
 	}
 
-	writeJSON(w, signInResponse{Token: signedToken})
+	writeJSON(w, http.StatusOK, signInResponse{Token: signedToken})
 }
 
 // auth — middleware, проверяющее JWT-токен из куки, если установлен TODO_PASSWORD

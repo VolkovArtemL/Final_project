@@ -11,47 +11,46 @@ import (
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		writeError(w, "не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "не указан идентификатор")
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeError(w, "задача не найдена")
+		writeError(w, http.StatusNotFound, "задача не найдена")
 		return
 	}
 
-	writeJSON(w, task)
+	writeJSON(w, http.StatusOK, task)
 }
 
-// updateTaskHandler обрабатывает PUT /api/task — изменение существующей задачи
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeError(w, "ошибка десериализации JSON")
+		writeError(w, http.StatusBadRequest, "ошибка десериализации JSON")
 		return
 	}
 
 	if task.ID == "" {
-		writeError(w, "не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "не указан идентификатор")
 		return
 	}
 
 	if task.Title == "" {
-		writeError(w, "не указан заголовок задачи")
+		writeError(w, http.StatusBadRequest, "не указан заголовок задачи")
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := db.UpdateTask(&task); err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	writeJSON(w, map[string]any{})
+	writeJSON(w, http.StatusOK, map[string]any{})
 }

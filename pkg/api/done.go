@@ -11,33 +11,33 @@ import (
 func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		writeError(w, "не указан идентификатор")
+		writeError(w, http.StatusBadRequest, "не указан идентификатор")
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeError(w, "задача не найдена")
+		writeError(w, http.StatusNotFound, "задача не найдена")
 		return
 	}
 
 	if task.Repeat == "" {
 		if err := db.DeleteTask(id); err != nil {
-			writeError(w, err.Error())
+			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	} else {
 		next, err := NextDate(time.Now(), task.Date, task.Repeat)
 		if err != nil {
-			writeError(w, err.Error())
+			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if err := db.UpdateDate(next, id); err != nil {
-			writeError(w, err.Error())
+			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	writeJSON(w, map[string]any{})
+	writeJSON(w, http.StatusOK, map[string]any{})
 }

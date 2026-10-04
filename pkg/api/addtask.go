@@ -43,8 +43,9 @@ func checkDate(task *db.Task) error {
 }
 
 // writeJSON сериализует data в JSON и записывает в ответ
-func writeJSON(w http.ResponseWriter, data any) {
+func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(status)
 
 	resp, err := json.Marshal(data)
 	if err != nil {
@@ -56,8 +57,8 @@ func writeJSON(w http.ResponseWriter, data any) {
 }
 
 // writeError записывает в ответ JSON с текстом ошибки
-func writeError(w http.ResponseWriter, message string) {
-	writeJSON(w, map[string]string{"error": message})
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]string{"error": message})
 }
 
 // addTaskHandler обрабатывает POST /api/task — добавление новой задачи
@@ -65,25 +66,25 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeError(w, "ошибка десериализации JSON")
+		writeError(w, http.StatusBadRequest, "ошибка десериализации JSON")
 		return
 	}
 
 	if task.Title == "" {
-		writeError(w, "не указан заголовок задачи")
+		writeError(w, http.StatusBadRequest, "не указан заголовок задачи")
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeError(w, err.Error())
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, map[string]string{"id": strconv.FormatInt(id, 10)})
+	writeJSON(w, http.StatusOK, map[string]string{"id": strconv.FormatInt(id, 10)})
 }

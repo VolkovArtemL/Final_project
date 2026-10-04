@@ -20,6 +20,7 @@ func main() {
 	if err := db.Init(dbFile); err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
